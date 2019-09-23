@@ -13,11 +13,14 @@ export interface VNodeHook extends AsyncHook<VNode, AsyncIterable<VNode>> {
 
 }
 
-export function hooks(hooks: VNodeHooks, children?: VNodeChildrenHooks): VNodeHook {
-  const hook = asyncHooks(hooks);
+export function hooks(hooks?: VNodeHooks, children?: VNodeChildrenHooks): VNodeHook {
+  const hook = hooks ? asyncHooks(hooks) : undefined;
   const childrenHook = children ? asyncHooks(children) : undefined;
   return async function *hooked(instance: AsyncIterable<VNode>) {
-    for await (const node of hook(instance)) {
+    if (!hook && !childrenHook) {
+      return instance; // Nothing ever to be done
+    }
+    for await (const node of (hook ? hook(instance) : instance)) {
       if (!childrenHook || !node.children) {
         yield node;
       } else {
