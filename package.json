@@ -2,10 +2,12 @@
   "name": "@opennetwork/vnode-hooks",
   "version": "1.0.0",
   "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "type": "module",
   "license": "MIT",
   "scripts": {
-    "build": "tsc --declaration && npm run tslint",
+    "build": "tsc --declaration && npm run tslint && node correct-import-extensions.js",
     "watch": "tsc -w",
     "tslint": "tslint -c tslint.json -p tsconfig.json",
     "prepublishOnly": "npm run build"
@@ -22,6 +24,7 @@
   "devDependencies": {
     "@opennetwork/vnode": "^12.2.0",
     "esm": "^3.2.25",
+    "filehound": "^1.17.3",
     "iterable": "^5.6.0",
     "tslint": "^5.20.0",
     "typescript": "^3.6.3"
