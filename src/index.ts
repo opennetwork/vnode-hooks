@@ -9,7 +9,11 @@ export interface VNodeChildrenHooks extends AsyncHooks<AsyncIterable<VNode>, Asy
 
 }
 
-export function hooks(hooks: VNodeHooks, children?: VNodeChildrenHooks): AsyncHook<VNode, AsyncIterable<VNode>> {
+export interface VNodeHook extends AsyncHook<VNode, AsyncIterable<VNode>> {
+
+}
+
+export function hooks(hooks: VNodeHooks, children?: VNodeChildrenHooks): VNodeHook {
   const hook = asyncHooks(hooks);
   const childrenHook = children ? asyncHooks(children) : undefined;
   return async function *hooked(instance: AsyncIterable<VNode>) {
