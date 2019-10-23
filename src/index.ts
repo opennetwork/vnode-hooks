@@ -1,34 +1,27 @@
 import { VNode } from "@opennetwork/vnode";
-import { AsyncHooks, AsyncHook, asyncHooks } from "iterable";
+import { asyncExtendedIterable, isPromise } from "iterable";
 
-export interface VNodeHooks extends AsyncHooks<VNode, AsyncIterable<VNode>, AsyncIterator<VNode>> {
-
+export interface VNodeHook<Return extends (VNode | Promise<VNode>) = (VNode | Promise<VNode>)> {
+  (node: VNode): Return;
 }
 
-export interface VNodeChildrenHooks extends AsyncHooks<AsyncIterable<VNode>, AsyncIterable<AsyncIterable<VNode>>, AsyncIterator<AsyncIterable<VNode>>> {
-
-}
-
-export interface VNodeHook extends AsyncHook<VNode, AsyncIterable<VNode>> {
-
-}
-
-export function hooks(hooks?: VNodeHooks, children?: VNodeChildrenHooks): VNodeHook {
-  const hook = hooks ? asyncHooks(hooks) : undefined;
-  const childrenHook = children ? asyncHooks(children) : undefined;
-  return async function *hooked(instance: AsyncIterable<VNode>) {
-    if (!hook && !childrenHook) {
-      return instance; // Nothing ever to be done
+export function hook(fn: VNodeHook): VNodeHook<Promise<VNode>> {
+  return async function hookFn(node: VNode): Promise<VNode> {
+    let hooked = fn(node);
+    if (isPromise(hooked)) {
+      hooked = await hooked;
     }
-    for await (const node of (hook ? hook(instance) : instance)) {
-      if (!childrenHook || !node.children) {
-        yield node;
-      } else {
-        yield {
-          ...node,
-          children: childrenHook(node.children)
-        };
-      }
+    if (!hooked) {
+      return undefined;
     }
+    if (!hooked.children) {
+      return hooked;
+    }
+    return {
+      ...hooked,
+      children: asyncExtendedIterable(hooked.children).map(
+        children => asyncExtendedIterable(children).map(hookFn)
+      )
+    };
   };
 }
