@@ -1,5 +1,5 @@
 import { VNode } from "@opennetwork/vnode";
-import { asyncExtendedIterable, isPromise } from "iterable";
+import { isPromise } from "iterable";
 
 export interface VNodeHookFn {
   (node: VNode, parent?: VNode): VNode | Promise<VNode>;
@@ -10,7 +10,18 @@ export interface VNodeHook {
 }
 
 export function hook(fn: VNodeHookFn): VNodeHook {
-  return async function hookFn(node: VNode, parent?: VNode): Promise<VNode> {
+
+  async function *hookedChildren(parent: VNode, children: AsyncIterable<ReadonlyArray<VNode>>): AsyncIterable<ReadonlyArray<VNode>> {
+    for await (const updates of children) {
+      yield Object.freeze(
+        await Promise.all(
+          updates.map(child => hookFn(child, parent))
+        )
+      );
+    }
+  }
+
+  async function hookFn(node: VNode, parent?: VNode): Promise<VNode> {
     let hooked = fn(node, parent);
     if (isPromise(hooked)) {
       hooked = await hooked;
@@ -23,9 +34,9 @@ export function hook(fn: VNodeHookFn): VNodeHook {
     }
     return {
       ...hooked,
-      children: asyncExtendedIterable(hooked.children).map(
-        children => asyncExtendedIterable(children).map(child => hookFn(child, parent))
-      )
+      children: hookedChildren(hooked, hooked.children)
     };
-  };
+  }
+
+  return hookFn;
 }
