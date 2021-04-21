@@ -18,20 +18,25 @@
     esutils "^2.0.2"
     js-tokens "^4.0.0"
 
-"@opennetwork/progressive-merge@^4.0.4":
-  version "4.0.4"
-  resolved "https://registry.npmjs.org/@opennetwork/progressive-merge/-/progressive-merge-4.0.4.tgz#c564f1367bfe34f92e37b3465f375a808d905535"
-  integrity sha512-OxqJur/+aNpDTDz+xFxuC+oJOiLWwE358tq1ZZNcHFvJs4pgAO410+dmpMNnhIv2JJUPqRHQyur435tlDqCvHQ==
+"@opennetwork/linked-list@^4.0.0":
+  version "4.0.0"
+  resolved "https://registry.npmjs.org/@opennetwork/linked-list/-/linked-list-4.0.0.tgz#69e25d0b00387f00da91faea2a5b77897d920712"
+  integrity sha512-aMEXPA0y3FZd5IlPPNVLHf5jxwNE9bo6d+5OgCsqZhRilftUuaytEnAS+7ggjiPekAtVDFl2okYROqtL3f02+g==
 
-"@opennetwork/vnode@^18.1.0":
-  version "18.1.1"
-  resolved "https://registry.npmjs.org/@opennetwork/vnode/-/vnode-18.1.1.tgz#b05b4aa35f4e3827901974dbef04f1394ee86bbf"
-  integrity sha512-blreKvKe16HNdTCrbTRMwzYtffn0IPQufWg8EkWyI25B6GBbVwcXVxXeonh0h9QBoh7vUxzxX/opReXkZGn9uA==
+"@opennetwork/progressive-merge@^5.2.0":
+  version "5.2.0"
+  resolved "https://registry.npmjs.org/@opennetwork/progressive-merge/-/progressive-merge-5.2.0.tgz#b9d349e2622726b0cf5b96209753f4c560489d35"
+  integrity sha512-87SEGCJnAxZtJzFc4HbeJMjYeeCriyTAVjccny7Eu68+3BhtBlU9cdOPsfnyvjFNF+NDpe+T0LKTV1ruKNJaRA==
 
-"@types/node@^14.14.35":
-  version "14.14.35"
-  resolved "https://registry.npmjs.org/@types/node/-/node-14.14.35.tgz#42c953a4e2b18ab931f72477e7012172f4ffa313"
-  integrity sha512-Lt+wj8NVPx0zUmUwumiVXapmaLUcAk3yPuHCFVXras9k5VT9TdhJqKqGVUQCD60OTMCl0qxJ57OiTL0Mic3Iag==
+"@opennetwork/vnode@^21.3.0":
+  version "21.3.0"
+  resolved "https://registry.npmjs.org/@opennetwork/vnode/-/vnode-21.3.0.tgz#8f92da51529f36b7ca27dc4213d4a104bda998a6"
+  integrity sha512-la9L2LcBLtHjUbDbYw+FlXHoJ+88UY3JxAUZmk4D8wdhwWf2RBSAaG1hb9MU66lJ1nypGTUIoau/bcy8c+KoTw==
+
+"@types/node@^14.14.41":
+  version "14.14.41"
+  resolved "https://registry.npmjs.org/@types/node/-/node-14.14.41.tgz#d0b939d94c1d7bd53d04824af45f1139b8c45615"
+  integrity sha512-dueRKfaJL4RTtSa7bWeTK1M+VH+Gns73oCgzvYfHZywRCoPSd8EkXBL0mZ9unPTveBn+D9phZBaxuzpwjWkW0g==
 
 ansi-styles@^3.2.1:
   version "3.2.1"
@@ -220,10 +225,12 @@ lodash@^4.17.10:
   resolved "https://registry.npmjs.org/lodash/-/lodash-4.17.15.tgz#b447f6670a0455bbfeedd11392eff330ea097548"
   integrity sha512-8xOcRHvCjnocdS5cpwXQXVzmmh5e5+saE2QGoeQmbKmRS6J3VQppPOIt0MnmE+4xlZoumy0GPG0D0MVIQbNA1A==
 
-microtask-collector@^1.0.4:
-  version "1.0.4"
-  resolved "https://registry.npmjs.org/microtask-collector/-/microtask-collector-1.0.4.tgz#c92751f5171d55477cae7b613435b735b326fdd3"
-  integrity sha512-j49//GFbQnRTZSrKgmgp5q1SAewmr9+ZQ4+Ta6jf7CS29Z8POqNrI99X3ztz1SZqFjr9kMzZQjy7+T1X33KgIA==
+microtask-collector@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.npmjs.org/microtask-collector/-/microtask-collector-3.1.0.tgz#a2ab49c1d5ea436ecaed027373b8a19a53b84f79"
+  integrity sha512-hqriS8rmSdcrnyxY8c1yA7Zb1PKLEQxxm1A5d53ZzxaMSpOWbW98zdKnjtJU6BCSANCu5C3rfcyxldXcTUQS9w==
+  dependencies:
+    "@opennetwork/linked-list" "^4.0.0"
 
 minimatch@^3.0.3, minimatch@^3.0.4:
   version "3.0.4"
@@ -341,10 +348,10 @@ tsutils@^2.29.0:
   dependencies:
     tslib "^1.8.1"
 
-typescript@^4.2.3:
-  version "4.2.3"
-  resolved "https://registry.npmjs.org/typescript/-/typescript-4.2.3.tgz#39062d8019912d43726298f09493d598048c1ce3"
-  integrity sha512-qOcYwxaByStAWrBf4x0fibwZvMRG+r4cQoTjbPtUlrWjBHbmCAww1i448U0GJ+3cNNEtebDteo/cHOR3xJ4wEw==
+typescript@^4.2.4:
+  version "4.2.4"
+  resolved "https://registry.npmjs.org/typescript/-/typescript-4.2.4.tgz#8610b59747de028fda898a8aef0e103f156d0961"
+  integrity sha512-V+evlYHZnQkaz8TRBuxTA92yZBPotr5H+WhQ7bD3hZUndx5tGOa1fuCgeSjxAzM1RiN5IzvadIXTVefuuwZCRg==
 
 unit-compare@^1.0.1:
   version "1.0.1"
