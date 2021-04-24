@@ -1,4 +1,4 @@
-import { VNode } from "@opennetwork/vnode";
+import { VNode, createNode } from "@opennetwork/vnode";
 
 function isPromise<T = unknown>(value: unknown): value is Pick<Promise<T>, "then"> {
   function isPromiseLike(value: unknown): value is { then?: unknown } {
@@ -10,40 +10,29 @@ function isPromise<T = unknown>(value: unknown): value is Pick<Promise<T>, "then
   );
 }
 
-export interface VNodeHookFn<O extends VNode = VNode> {
-  (node: VNode, parent?: VNode): O | Promise<O>;
+export interface HookFn {
+  (node: VNode): VNode | Promise<VNode>;
 }
 
-export interface VNodeHook<O extends VNode = VNode> {
-  (node: VNode, parent?: VNode): Promise<O>;
+export interface HookOptions {
+  hook: HookFn;
 }
 
-export function hook<O extends VNode = VNode>(fn: VNodeHookFn<O>): VNodeHook<O> {
-
-  async function *hookedChildren(parent: VNode, children: AsyncIterable<ReadonlyArray<VNode>>): O["children"] {
-    for await (const updates of children) {
-      yield await Promise.all(
-        updates.map(child => hookFn(child, parent))
-      );
-    }
+export async function *Hook({ hook }: HookOptions, node: VNode): AsyncIterable<VNode | VNode[]> {
+  let hooked = hook(node);
+  if (isPromise(hooked)) {
+    hooked = await hooked;
   }
-
-  async function hookFn(node: VNode, parent?: VNode): Promise<O> {
-    let hooked = fn(node, parent);
-    if (isPromise(hooked)) {
-      hooked = await hooked;
-    }
-    if (!hooked) {
-      return undefined;
-    }
-    if (!hooked.children) {
-      return hooked;
-    }
-    return {
-      ...hooked,
-      children: hookedChildren(hooked, hooked.children)
-    };
+  if (!hooked.children) {
+    return hooked;
   }
-
-  return hookFn;
+  for await (const children of hooked.children) {
+    yield children.map(child => (
+      createNode(
+        Hook,
+        { hook },
+        child
+      )
+    ));
+  }
 }
