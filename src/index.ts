@@ -19,12 +19,9 @@ export interface HookOptions {
 }
 
 export async function *Hook({ hook }: HookOptions, node: VNode): AsyncIterable<VNode | VNode[]> {
-  let hooked = hook(node);
-  if (isPromise(hooked)) {
-    hooked = await hooked;
-  }
+  const hooked = await hook(node);
   if (!hooked.children) {
-    return hooked;
+    return yield hooked;
   }
   for await (const children of hooked.children) {
     yield children.map(child => (
