@@ -10,8 +10,10 @@ function isPromise<T = unknown>(value: unknown): value is Pick<Promise<T>, "then
   );
 }
 
+export type HookPair = [VNode, HookFn];
+
 export interface HookFn {
-  (node: VNode): VNode | Promise<VNode>;
+  (node: VNode): VNode | Promise<VNode> | HookPair | Promise<HookPair>;
 }
 
 export interface HookOptions {
@@ -19,7 +21,7 @@ export interface HookOptions {
 }
 
 export async function *Hook({ hook }: HookOptions, node: VNode): AsyncIterable<VNode | VNode[]> {
-  const hooked = await hook(node);
+  const [hooked, nextHook] = await getResult();
   if (!hooked.children) {
     return yield hooked;
   }
@@ -27,9 +29,21 @@ export async function *Hook({ hook }: HookOptions, node: VNode): AsyncIterable<V
     yield children.map(child => (
       createNode(
         Hook,
-        { hook },
+        { hook: nextHook },
         child
       )
     ));
+  }
+  async function getResult(): Promise<HookPair> {
+    const result = await hook(node);
+    if (isHookPair(result)) {
+      return result;
+    } else {
+      return [result, hook];
+    }
+
+    function isHookPair(value: unknown): value is HookPair {
+      return value === result && Array.isArray(value);
+    }
   }
 }
