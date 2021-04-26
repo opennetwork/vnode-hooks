@@ -1,5 +1,4 @@
 import { VNode, createNode } from "@opennetwork/vnode";
-import set = Reflect.set;
 
 function isPromise<T = unknown>(value: unknown): value is Pick<Promise<T>, "then"> {
   function isPromiseLike(value: unknown): value is { then?: unknown } {
@@ -13,8 +12,10 @@ function isPromise<T = unknown>(value: unknown): value is Pick<Promise<T>, "then
 
 export type HookPair = [VNode, HookFn];
 
+export type HookFnReturn = VNode | HookPair;
+
 export interface HookFn {
-  (node: VNode): VNode | Promise<VNode> | HookPair | Promise<HookPair>;
+  (node: VNode): HookFnReturn | Promise<HookFnReturn>;
 }
 
 export interface HookOptions {
