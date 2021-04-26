@@ -21,6 +21,7 @@ export interface HookFn {
 export interface HookOptions {
   hook: HookFn;
   depth?: number;
+  mutate?: boolean;
 }
 
 const HookedMap = new WeakMap<HookFn, WeakSet<VNode>>();
@@ -40,7 +41,7 @@ function setHooked(hook: HookFn, node: VNode) {
   getHookedSet(hook).add(node);
 }
 
-export async function Hook({ hook, depth }: HookOptions, node: VNode): Promise<VNode> {
+export async function Hook({ hook, depth, mutate, ...options }: HookOptions, node: VNode): Promise<VNode> {
   if (isHooked(hook, node)) {
     return node;
   }
@@ -48,6 +49,15 @@ export async function Hook({ hook, depth }: HookOptions, node: VNode): Promise<V
   setHooked(hook, hooked);
   if (!hooked.children) {
     return hooked;
+  } else if (mutate) {
+    return {
+      ...hooked,
+      children: {
+        [Symbol.asyncIterator]() {
+          return hookChildren(hooked);
+        }
+      }
+    };
   } else {
     return new Proxy(hooked, {
       get(target, prop: keyof VNode) {
