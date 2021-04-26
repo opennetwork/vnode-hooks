@@ -53,8 +53,8 @@ export async function Hook({ hook, depth, mutate, ...options }: HookOptions, nod
     return {
       ...hooked,
       children: {
-        [Symbol.asyncIterator]() {
-          return hookChildren(hooked);
+        async *[Symbol.asyncIterator]() {
+          yield * hookChildren(hooked);
         }
       }
     };
@@ -68,7 +68,7 @@ export async function Hook({ hook, depth, mutate, ...options }: HookOptions, nod
       }
     });
   }
-  async function *hookChildren(hooked: VNode): AsyncIterable<VNode[]> {
+  async function *hookChildren(hooked: VNode): AsyncIterable<ReadonlyArray<VNode>> {
     for await (const children of hooked.children) {
       yield children.map(child => (
         createNode(Hook({ hook: nextHook, depth: (depth || 0) + 1 }, child))

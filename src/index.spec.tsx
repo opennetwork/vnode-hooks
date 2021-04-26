@@ -2,7 +2,10 @@ import { createNode, h, VNode } from "@opennetwork/vnode";
 import { Hook } from "./index";
 import { render } from "@opennetwork/vdom";
 
-describe("index", () => {
+describe.each([
+    [true],
+    [false]
+])("index, mutate: %p", (mutate) => {
 
   it("hooks only a single node", async () => {
 
@@ -18,7 +21,7 @@ describe("index", () => {
       return node;
     };
     const node = (
-        <Hook hook={hook}>
+        <Hook hook={hook} mutate={mutate}>
           <Component />
         </Hook>
     );
@@ -44,7 +47,7 @@ describe("index", () => {
       return node;
     };
     const node = (
-        <Hook hook={hook}>
+        <Hook hook={hook} mutate={mutate}>
           <Component />
         </Hook>
     );
@@ -74,7 +77,7 @@ describe("index", () => {
       return node;
     };
     const node = (
-        <Hook hook={hook}>
+        <Hook hook={hook} mutate={mutate}>
           <Component />
         </Hook>
     );
