@@ -49,12 +49,16 @@ export async function Hook({ hook, depth }: HookOptions, node: VNode): Promise<V
   if (!hooked.children) {
     return hooked;
   } else {
-    return {
-      ...hooked,
-      children: hookChildren()
-    };
+    return new Proxy(hooked, {
+      get(target, prop: keyof VNode) {
+        if (prop === "children") {
+          return hookChildren(target);
+        }
+        return target[prop];
+      }
+    });
   }
-  async function *hookChildren(): AsyncIterable<VNode[]> {
+  async function *hookChildren(hooked: VNode): AsyncIterable<VNode[]> {
     for await (const children of hooked.children) {
       yield children.map(child => (
         createNode(Hook({ hook: nextHook, depth: (depth || 0) + 1 }, child))
