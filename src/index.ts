@@ -40,20 +40,28 @@ function setHooked(hook: HookFn, node: VNode) {
   getHookedSet(hook).add(node);
 }
 
-export async function *Hook({ hook, depth }: HookOptions, node: VNode): AsyncIterable<VNode | VNode[]> {
+export async function Hook({ hook, depth }: HookOptions, node: VNode): Promise<VNode> {
   if (isHooked(hook, node)) {
-    return yield node;
+    return node;
   }
   const [hooked, nextHook] = await getResult();
   setHooked(hook, hooked);
   if (!hooked.children) {
-    return yield hooked;
+    return hooked;
+  } else {
+    return {
+      ...hooked,
+      children: hookChildren()
+    };
   }
-  for await (const children of hooked.children) {
-    yield children.map(child => (
-      createNode(Hook({ hook: nextHook, depth: (depth || 0) + 1 }, child))
-    ));
+  async function *hookChildren(): AsyncIterable<VNode[]> {
+    for await (const children of hooked.children) {
+      yield children.map(child => (
+        createNode(Hook({ hook: nextHook, depth: (depth || 0) + 1 }, child))
+      ));
+    }
   }
+
   async function getResult(): Promise<HookPair> {
     const result = await hook(node);
     if (isHookPair(result)) {
