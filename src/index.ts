@@ -1,4 +1,4 @@
-import { VNode, createNode } from "@opennetwork/vnode";
+import { VNode, createNode, isFragmentVNode } from "@opennetwork/vnode";
 
 function isPromise<T = unknown>(value: unknown): value is Pick<Promise<T>, "then"> {
   function isPromiseLike(value: unknown): value is { then?: unknown } {
@@ -20,6 +20,7 @@ export interface HookFn {
 
 export interface HookOptions {
   hook: HookFn;
+  depth?: number;
 }
 
 const HookedMap = new WeakMap<HookFn, WeakSet<VNode>>();
@@ -39,7 +40,10 @@ function setHooked(hook: HookFn, node: VNode) {
   getHookedSet(hook).add(node);
 }
 
-export async function *Hook({ hook }: HookOptions, node: VNode): AsyncIterable<VNode | VNode[]> {
+export async function *Hook({ hook, depth }: HookOptions, node: VNode): AsyncIterable<VNode | VNode[]> {
+  if (isHooked(hook, node)) {
+    return yield node;
+  }
   const [hooked, nextHook] = await getResult();
   setHooked(hook, hooked);
   if (!hooked.children) {
@@ -47,15 +51,11 @@ export async function *Hook({ hook }: HookOptions, node: VNode): AsyncIterable<V
   }
   for await (const children of hooked.children) {
     yield children.map(child => (
-      createNode(
-        Hook,
-        { hook: nextHook },
-        child
-      )
+      createNode(Hook({ hook: nextHook, depth: (depth || 0) + 1 }, child))
     ));
   }
   async function getResult(): Promise<HookPair> {
-    const result = isHooked(hook, node) ? node : await hook(node);
+    const result = await hook(node);
     if (isHookPair(result)) {
       return result;
     } else {
