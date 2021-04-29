@@ -1152,10 +1152,10 @@
   resolved "https://registry.npmjs.org/@opennetwork/vdom/-/vdom-20.1.0.tgz#2c4bc0a08d6d8392d16fb010f14c55ba3f9029f2"
   integrity sha512-OETMLSjfk09rbJryjUVco8WUV1IzCQ9kNHEEG/1QI0zKsR6+PpSLv/shnIXReu119nWaozUYeW4ktdkLg+E+3g==
 
-"@opennetwork/vnode@^26.4.0":
-  version "26.4.0"
-  resolved "https://registry.npmjs.org/@opennetwork/vnode/-/vnode-26.4.0.tgz#f8140e55bc4fdb58cd813bc3a239d0710f17721c"
-  integrity sha512-kr/LpVkLplOiR21HIwJmEZR8Y7cTHszT+AzQaI1Dll0t1JtbiqpK/d2+TBaZx2E9EDWLoLhgTLROZ/5yhWZ9rA==
+"@opennetwork/vnode@^27.0.0":
+  version "27.0.0"
+  resolved "https://registry.npmjs.org/@opennetwork/vnode/-/vnode-27.0.0.tgz#a281ff8dc66379227ef01bdd075b6561c6743c86"
+  integrity sha512-yUVWjmzq8ZUd34uknCs2R2BbzoQvIaoF47a4CAw/Z93lBzcFf8OqZ8xmyQrVvZbyqPUNMPSZ+MkTiVvra5f5jA==
 
 "@sinonjs/commons@^1.7.0":
   version "1.8.3"

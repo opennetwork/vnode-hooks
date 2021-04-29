@@ -1,14 +1,4 @@
-import { VNode, createNode, isFragmentVNode } from "@opennetwork/vnode";
-
-function isPromise<T = unknown>(value: unknown): value is Pick<Promise<T>, "then"> {
-  function isPromiseLike(value: unknown): value is { then?: unknown } {
-    return typeof value === "object";
-  }
-  return (
-    isPromiseLike(value) &&
-    value.then instanceof Function
-  );
-}
+import { VNode, createNode } from "@opennetwork/vnode";
 
 export type HookPair = [VNode, HookFn];
 
@@ -68,7 +58,7 @@ export async function Hook({ hook, depth, mutate, ...options }: HookOptions, nod
       }
     });
   }
-  async function *hookChildren(hooked: VNode): AsyncIterable<ReadonlyArray<VNode>> {
+  async function *hookChildren(hooked: VNode): AsyncIterable<VNode[]> {
     for await (const children of hooked.children) {
       yield children.map(child => (
         createNode(Hook({ hook: nextHook, depth: (depth || 0) + 1 }, child))
