@@ -1,5 +1,5 @@
 import { createNode, h, VNode } from "@opennetwork/vnode";
-import { Hook, HookFn, HookPair } from "./index";
+import { Hook, HookChildrenFn, HookFn, HookPair, HookTriple } from "./index";
 import { assertElement, render } from "@opennetwork/vdom";
 import { AsyncLocalStorage } from "async_hooks";
 
@@ -133,10 +133,13 @@ describe.each([
 
   });
 
+  it("Throws with no hooks", async () => {
+    await expect(() => Hook({}, createNode("p"))).rejects.toThrow();
+  });
+
   describe("node async hooks",  () => {
 
-    it("works", async () => {
-
+    it.each([[true], [false]])("works, children hook: %p", async (childrenHook) => {
       const key = `${Math.random()}`;
       const value = `${Math.random()}`;
       const asyncKey = `${Math.random()}`;
@@ -164,7 +167,11 @@ describe.each([
       }
 
       const hooked = (
-          <Hook hook={hookStorage(storage, store)} mutate={mutate}>
+          <Hook
+              hook={childrenHook ? undefined : hookStorage(storage, store)}
+              hookChildren={childrenHook ? hookChildrenStorage(storage, store) : undefined}
+              mutate={mutate}
+          >
             {h("a", { }, <Sync />)}
             {h("b", { }, <Async />)}
           </Hook>
@@ -185,30 +192,27 @@ describe.each([
     });
 
     function hookStorage<T>(storage: AsyncLocalStorage<T>, store: T): HookFn {
-      return node => hookWithStorage(node, storage, store);
+      const childrenHook = hookChildrenStorage(storage, store);
+      return hook;
+      function hook(node: VNode): HookTriple {
+        return [node, hook, childrenHook];
+      }
     }
 
-    function hookWithStorage<T>(node: VNode, storage: AsyncLocalStorage<T>, store: T) {
-      return new Proxy(node, {
-        get<K extends keyof VNode>(target: VNode, p: K) {
-          if (p !== "children" || !target.children) {
-            return target[p];
-          }
-          return hookChildren(target, storage, store);
-        }
-      });
+    function hookChildrenStorage<T>(storage: AsyncLocalStorage<T>, store: T): HookChildrenFn {
+      return node => hookChildren(node, storage, store);
     }
 
     async function *hookChildren<T>(node: VNode, storage: AsyncLocalStorage<T>, store: T): VNode["children"] {
-      const iterator = node.children[Symbol.asyncIterator]();
+      const iterator = await storage.run(store, () => node.children[Symbol.asyncIterator]());
       let result;
       try {
 
         do {
+          result = await storage.run(store, () => {
+            return iterator.next();
+          });
           try {
-            result = await storage.run(store, () => {
-              return iterator.next();
-            });
             if (isYieldResult(result)) {
               yield result.value;
             }

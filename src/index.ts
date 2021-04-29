@@ -1,42 +1,30 @@
 import { VNode, createNode } from "@opennetwork/vnode";
 
 export type HookPair = [VNode, HookFn];
+export type HookTriple = [...HookPair, HookChildrenFn];
 
-export type HookFnReturn = VNode | HookPair;
+export type HookFnReturn = VNode | HookPair | HookTriple;
 
 export interface HookFn {
   (node: VNode): HookFnReturn | Promise<HookFnReturn>;
 }
 
+export interface HookChildrenFn {
+  (node: VNode): AsyncIterable<VNode[]>;
+}
+
 export interface HookOptions {
-  hook: HookFn;
+  hook?: HookFn;
+  hookChildren?: HookChildrenFn;
   depth?: number;
   mutate?: boolean;
 }
 
-const HookedMap = new WeakMap<HookFn, WeakSet<VNode>>();
-function getHookedSet(hook: HookFn): WeakSet<VNode> {
-  const existing = HookedMap.get(hook);
-  if (existing) {
-    return existing;
+export async function Hook({ hook, depth, mutate, hookChildren, ...options }: HookOptions, node: VNode): Promise<VNode> {
+  if (!(hook ?? hookChildren)) {
+    throw new Error("Expected hook or hookedChildren");
   }
-  const next = new WeakSet();
-  HookedMap.set(hook, next);
-  return next;
-}
-function isHooked(hook: HookFn, node: VNode): boolean {
-  return getHookedSet(hook).has(node);
-}
-function setHooked(hook: HookFn, node: VNode) {
-  getHookedSet(hook).add(node);
-}
-
-export async function Hook({ hook, depth, mutate, ...options }: HookOptions, node: VNode): Promise<VNode> {
-  if (isHooked(hook, node)) {
-    return node;
-  }
-  const [hooked, nextHook] = await getResult();
-  setHooked(hook, hooked);
+  const [hooked, nextHook, nextChildrenHook] = await getResult();
   if (!hooked.children) {
     return hooked;
   } else if (mutate) {
@@ -44,7 +32,7 @@ export async function Hook({ hook, depth, mutate, ...options }: HookOptions, nod
       ...hooked,
       children: {
         async *[Symbol.asyncIterator]() {
-          yield * hookChildren(hooked);
+          yield * hookChildrenGenerator(hooked);
         }
       }
     };
@@ -52,30 +40,47 @@ export async function Hook({ hook, depth, mutate, ...options }: HookOptions, nod
     return new Proxy(hooked, {
       get(target, prop: keyof VNode) {
         if (prop === "children") {
-          return hookChildren(target);
+          return hookChildrenGenerator(target);
         }
         return target[prop];
       }
     });
   }
-  async function *hookChildren(hooked: VNode): AsyncIterable<VNode[]> {
-    for await (const children of hooked.children) {
+  async function *hookChildrenGenerator(hooked: VNode): AsyncIterable<VNode[]> {
+    const hookedChildren = nextChildrenHook ? nextChildrenHook(hooked) : hooked.children;
+    for await (const children of hookedChildren) {
       yield children.map(child => (
-        createNode(Hook({ hook: nextHook, depth: (depth || 0) + 1 }, child))
+        createNode(
+          Hook(
+            {
+              hook: nextHook,
+              hookChildren: nextChildrenHook,
+              depth: (depth || 0) + 1,
+              mutate
+            },
+            child
+          )
+        )
       ));
     }
   }
 
-  async function getResult(): Promise<HookPair> {
-    const result = await hook(node);
-    if (isHookPair(result)) {
+  async function getResult(): Promise<HookTriple> {
+    const result = hook ? await hook(node) : node;
+    if (isHookTriple(result)) {
       return result;
+    } else if (isHookPair(result)) {
+      return [...result, hookChildren];
     } else {
-      return [result, hook];
+      return [result, hook, hookChildren];
     }
 
     function isHookPair(value: unknown): value is HookPair {
-      return value === result && Array.isArray(value);
+      return value === result && Array.isArray(value) && value.length === 2;
+    }
+
+    function isHookTriple(value: unknown): value is HookTriple {
+      return value === result && Array.isArray(value) && value.length === 3;
     }
   }
 }
