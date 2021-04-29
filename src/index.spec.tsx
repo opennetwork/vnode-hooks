@@ -1,5 +1,5 @@
 import { createNode, h, VNode } from "@opennetwork/vnode";
-import { Hook, HookFn } from "./index";
+import { Hook, HookFn, HookPair } from "./index";
 import { assertElement, render } from "@opennetwork/vdom";
 import { AsyncLocalStorage } from "async_hooks";
 
@@ -90,6 +90,46 @@ describe.each([
     expect(references).toContain(2);
     expect(references).toContain(3);
     expect(references).toContain(4);
+
+  });
+
+
+  it("hooks four nodes with hook pair", async () => {
+
+    const root = document.createElement("div");
+    function Component() {
+      return [
+        createNode("div", { reference: 1 }),
+        createNode("div", { reference: 2 },
+            createNode("span", { reference: 3 }),
+            createNode("span", { reference: 4 })
+        )
+      ];
+    }
+
+    const references: unknown[] = [];
+    const otherReferences: unknown[] = [];
+    const otherHook = function (node: VNode): HookPair {
+      otherReferences.push(node.reference);
+      return [node, otherHook];
+    };
+    const hook = function (node: VNode): HookPair {
+      references.push(node.reference);
+      return [node, node.reference === 2 ? otherHook : hook];
+    };
+    const node = (
+        <Hook hook={hook} mutate={mutate}>
+          <Component />
+        </Hook>
+    );
+    await render(node, root);
+
+    console.log(root.outerHTML);
+
+    expect(references).toContain(1);
+    expect(references).toContain(2);
+    expect(otherReferences).toContain(3);
+    expect(otherReferences).toContain(4);
 
   });
 
